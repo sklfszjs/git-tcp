@@ -6,7 +6,7 @@ import (
 
 type Request struct {
 	Conn *Connection
-	Data []byte
+	msg  ginterface.IMessage
 }
 
 func (r *Request) GetConnection() ginterface.IConnection {
@@ -14,5 +14,9 @@ func (r *Request) GetConnection() ginterface.IConnection {
 }
 
 func (r *Request) GetData() []byte {
-	return r.Data
+	return r.msg.GetMsgData()
+}
+
+func (r *Request) GetId() uint32 {
+	return r.msg.GetMsgId()
 }

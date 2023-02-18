@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"go-tcp/gnet"
+	"io"
 	"net"
 	"time"
 )
@@ -14,18 +16,33 @@ func main() {
 		return
 	}
 	for {
-		_, err := conn.Write([]byte("hello server"))
+		dp := gnet.NewDataPackage()
+		binaryMsg, err := dp.Pack(gnet.NewMessage(1, []byte("hi\n")))
 		if err != nil {
+			fmt.Println("packate false")
+			return
+		}
+		if _, err := conn.Write(binaryMsg); err != nil {
 			fmt.Println("write error", err)
 			return
 		}
-		buf := make([]byte, 512)
-		cnt, err := conn.Read(buf)
-		if err != nil {
-			fmt.Println("read buf error")
-			return
+		time.Sleep(time.Second * 1)
+		binaryHead := make([]byte, dp.GetHeadLen())
+		if _, err := io.ReadFull(conn, binaryHead); err != nil {
+			fmt.Println("read head error", err)
+			break
 		}
-		fmt.Printf("server call back %s\n", buf[:cnt])
+		msgHead, err := dp.Unpack(binaryHead)
+		if err != nil {
+			fmt.Println("unpack error", err)
+		}
+		if msgHead.GetMsgLen() > 0 {
+			msg := msgHead.(*gnet.Message)
+			msg.Data = make([]byte, msgHead.GetMsgLen())
+			io.ReadFull(conn, msg.Data)
+			fmt.Println("response is ", msg.Data)
+		}
+
 		time.Sleep(time.Second * 1)
 
 	}

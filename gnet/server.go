@@ -13,7 +13,7 @@ type Server struct {
 	Ip        string
 	Port      int
 	IpVersion string
-	Router    ginterface.IRouter
+	Handler   ginterface.IHandler
 }
 
 func CallBackToClient(conn *net.TCPConn, data []byte, cnt int) error {
@@ -25,6 +25,7 @@ func CallBackToClient(conn *net.TCPConn, data []byte, cnt int) error {
 }
 
 func (s *Server) Start() {
+	fmt.Printf("%s is working!\n", s.Name)
 	//1.获取TCP地址
 	go func() {
 		addr, err := net.ResolveTCPAddr(s.IpVersion, fmt.Sprintf("%s:%d", s.Ip, s.Port))
@@ -48,7 +49,7 @@ func (s *Server) Start() {
 				fmt.Println("accept error", err)
 				continue
 			}
-			dealconn := NewConnection(conn, cid, s.Router)
+			dealconn := NewConnection(conn, cid, s.Handler)
 			cid++
 			go dealconn.Start()
 
@@ -66,8 +67,8 @@ func (s *Server) Serve() {
 	select {}
 }
 
-func (s *Server) AddRouter(router ginterface.IRouter) {
-	s.Router = router
+func (s *Server) AddRouter(msgID uint32, router ginterface.IRouter) {
+	s.Handler.AddRouter(msgID, router)
 }
 
 func NewServer() ginterface.IServer {
@@ -76,6 +77,7 @@ func NewServer() ginterface.IServer {
 		Ip:        utils.GlobalObject.Host,
 		Port:      utils.GlobalObject.TcpPort,
 		IpVersion: "tcp4",
+		Handler:   NewHandler(),
 	}
 	return res
 

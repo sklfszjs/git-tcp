@@ -5,4 +5,6 @@ type IHandler interface {
 	DoMsgHandler(IRequest)
 	//添加处理逻辑
 	AddRouter(msgID uint32, router IRouter)
+	StartWorkerPool()
+	SendMsgToTaskQueue(IRequest)
 }

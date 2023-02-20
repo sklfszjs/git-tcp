@@ -44,6 +44,12 @@ func (this *Testrouter_2) PostHandler(r ginterface.IRequest) {
 func main() {
 
 	server := gnet.NewServer()
+	server.SetOnConnStart(func(c ginterface.IConnection) {
+		c.SendMsg(1, []byte("start!"))
+	})
+	server.SetOnConnStop(func(c ginterface.IConnection) {
+		c.SendMsg(1, []byte("stop!"))
+	})
 	server.AddRouter(1, &Testrouter{})
 	server.AddRouter(2, &Testrouter_2{})
 	server.Serve()

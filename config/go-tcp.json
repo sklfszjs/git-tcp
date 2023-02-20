@@ -1,4 +1,5 @@
 {
     "Name":"server demo",
-    "MaxConn":120
+    "MaxConn":120,
+    "WorkerPoolSize":10
 }

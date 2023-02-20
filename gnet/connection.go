@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go-tcp/ginterface"
+	"go-tcp/utils"
 	"io"
 	"net"
 )
@@ -15,10 +16,12 @@ type Connection struct {
 	EXITChannel chan bool
 	Handler     ginterface.IHandler
 	MsgChan     chan []byte
+	Server      ginterface.IServer
 }
 
-func NewConnection(conn *net.TCPConn, connid uint32, handler ginterface.IHandler) ginterface.IConnection {
+func NewConnection(server ginterface.IServer, conn *net.TCPConn, connid uint32, handler ginterface.IHandler) ginterface.IConnection {
 	c := &Connection{
+		Server:      server,
 		Conn:        conn,
 		ConnID:      connid,
 		isClosed:    false,
@@ -26,6 +29,8 @@ func NewConnection(conn *net.TCPConn, connid uint32, handler ginterface.IHandler
 		Handler:     handler,
 		MsgChan:     make(chan []byte),
 	}
+	//这样不用其他地方管自己的添加了
+	c.Server.GetConnManager().AddConnection(c)
 	return c
 }
 
@@ -82,9 +87,13 @@ func (c *Connection) StartReader() {
 			msg:  msg,
 			Conn: c,
 		}
-		go func(req ginterface.IRequest) {
-			c.Handler.DoMsgHandler(req)
-		}(req)
+		if utils.GlobalObject.WorkerPoolSize > 0 {
+			go c.Handler.SendMsgToTaskQueue(req)
+		} else {
+			go func(req ginterface.IRequest) {
+				c.Handler.DoMsgHandler(req)
+			}(req)
+		}
 
 	}
 
@@ -95,6 +104,9 @@ func (c *Connection) Start() {
 	//TODO启动写业务
 	go c.StartReader()
 	go c.StartWriter()
+	//这个一定要放在这两个后面，不然会卡死。
+	c.Server.CallOnConnStart(c)
+
 }
 
 func (c *Connection) Stop() {
@@ -102,11 +114,14 @@ func (c *Connection) Stop() {
 		return
 	}
 	c.isClosed = false
+	c.Server.CallOnConnStop(c)
 	c.Conn.Close()
 	//告知写routine退出
 	c.EXITChannel <- true
 	close(c.EXITChannel)
 	close(c.MsgChan)
+	//自己删除自己
+	c.Server.GetConnManager().RemoveConnection(c)
 }
 
 func (c *Connection) GetConnection() *net.TCPConn {
@@ -127,9 +142,7 @@ func (c *Connection) SendMsg(id uint32, cont []byte) error {
 	}
 	dp := NewDataPackage()
 	msg := NewMessage(id, cont)
-	fmt.Printf("%#v", msg)
 	binarymsg, err := dp.Pack(msg)
-	fmt.Println(binarymsg)
 	if err != nil {
 		return errors.New("data pack error")
 	}

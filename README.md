@@ -5,4 +5,4 @@ go run ./demo/server.go
 - 测试客户端启动：
 go run ./demo/client.go
 - 服务器框架搭建流程
-![图片](https://github.com/sklfszjs/go-tcp/blob/master/gnet/structure.png)
+![图片](gnet/structure.png)

@@ -4,4 +4,4 @@ go version go1.19.5
 go run ./demo/server.go
 - 测试客户端启动
 go run ./demo/client.go
-![](https://github.com/sklfszjs/go-tcp/blob/master/gnet/structure.png)
+![图片](https://github.com/sklfszjs/go-tcp/blob/master/gnet/structure.png)

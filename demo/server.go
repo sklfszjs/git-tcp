@@ -11,17 +11,16 @@ type Testrouter struct {
 }
 
 func (this *Testrouter) PreHandler(r ginterface.IRequest) {
-	fmt.Println("before\n")
+	fmt.Println("This is a new request, handle by router1, request ID is", r.GetId())
 
 }
 func (this *Testrouter) Handler(r ginterface.IRequest) {
-	fmt.Println("during\n")
-	fmt.Println("id", r.GetId(), "data", string(r.GetData()))
-	r.GetConnection().SendMsg(5, []byte("1"))
+	fmt.Println("handling the new request")
+	r.GetConnection().SendMsg(0, []byte(fmt.Sprintf("hello client, you ID is %d", r.GetId())))
 
 }
 func (this *Testrouter) PostHandler(r ginterface.IRequest) {
-	fmt.Println("after\n")
+	fmt.Println("bye bye!")
 }
 
 type Testrouter_2 struct {
@@ -29,18 +28,18 @@ type Testrouter_2 struct {
 }
 
 func (this *Testrouter_2) PreHandler(r ginterface.IRequest) {
-	fmt.Println("before_2\n")
+	fmt.Println("This is a new request, handle by router2, request ID is", r.GetId())
 
 }
 func (this *Testrouter_2) Handler(r ginterface.IRequest) {
-	fmt.Println("during_2\n")
-	fmt.Println("id", r.GetId(), "data", string(r.GetData()))
-	r.GetConnection().SendMsg(5, []byte("1"))
+	fmt.Println("handling the new request")
+	r.GetConnection().SendMsg(0, []byte(fmt.Sprintf("hello client, you ID is %d", r.GetId())))
 
 }
 func (this *Testrouter_2) PostHandler(r ginterface.IRequest) {
-	fmt.Println("after_2\n")
+	fmt.Println("bye bye!")
 }
+
 func main() {
 
 	server := gnet.NewServer()
